@@ -1,0 +1,55 @@
+macro "Analisis Dunas" {
+
+	requires("1.42m");
+
+	//*** Archivos I/O ***
+	file_ubicacion = File.openDialog("Ubicacion de la pelicula");
+	carpeta = File.getParent(file_ubicacion);
+
+	file_res = carpeta + File.separator + File.nameWithoutExtension + "_res.txt";
+	while (File.exists(file_res)) {
+		strbuf = "El archivo de resultados \n" + file_res + "\nya existe, elegir otro nombre.";
+		Dialog.create("Atencion");
+		Dialog.addMessage(strbuf);
+		Dialog.addString("", file_res, lengthOf(strbuf));
+		Dialog.show();
+		file_res = Dialog.getString();
+	}
+
+	//*** Apertura del stack ***
+	run("TIFF Virtual Stack...", "open=["+file_ubicacion+"] number=1 starting=1 increment=1 scale=100 file=[] or=[] convert sort");
+//	setBatchMode(true);
+	run("8-bit");
+// 	id = getImageID;
+
+	//*** Operaciones realizadas sobre todo el stack ***
+	run("Gaussian Blur...", "sigma=2 stack");
+	run("Convert to Mask", "calculate black");		// el umbral se calcula automaticamente en cada slice
+	run("Find Edges", "stack");
+	run("Skeletonize", "stack");
+	run("Invert LUT");
+
+	//*** se analiza cada slice individualmente para segmentar solo el perfil de la interfase fondo-
+	//*** para ello se recorre verticalmente la imagen en x=0 para buscar el perfil
+	//*** luego se lo selecciona y se borra todo lo demas
+	//*** Atencion, se supone que el primer pixel negro encontrado corresponde al perfil
+// 	for (i=1; i<=nSlices; i++) {
+//		setSlice(i);
+//		pixelY = 0;
+//		do {
+//			valorPixel = getPixel(0, pixelY);
+//			pixelY = pixelY + 1;
+//		} while (valorPixel == 255);
+//		doWand(0, pixelY-1);
+//		run("Clear Outside", "slice");
+//		run("Select None");
+//
+//	}	// fin for (i=1; i<=nSlices; i++)
+
+	//*** se guardan todos los perfiles en un archivo ascii
+	run("Save XY Coordinates...", "background=0 suppress process save=["+file_res+"]");
+
+}	// fin macro
+
+
+

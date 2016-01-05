@@ -1,0 +1,29 @@
+macro "Analisis Particulas" {
+
+			requires("1.42m");
+
+//*** Archivos I/O ***
+			file_ubicacion = File.openDialog("Ubicacion de la pelicula");
+			carpeta = File.getParent(file_ubicacion);
+			file_res = carpeta + File.separator + File.nameWithoutExtension + "_res.txt";
+				while (File.exists(file_res)) {
+					strbuf = "El archivo de resultados \n" + file_res + "\nya existe, elegir otro nombre.";
+					Dialog.create("Atencion");
+					Dialog.addMessage(strbuf);
+					Dialog.addString("", file_res, lengthOf(strbuf));
+					Dialog.show();
+					file_res = Dialog.getString();
+									}
+ 			setPasteMode("Difference");
+//*** Apertura del stack ***
+			run("TIFF Virtual Stack...", "open=["+file_ubicacion+"] number=1 starting=1 increment=1 scale=100 file=[] or=[] convert sort");
+			run("8-bit");
+           			for (i=1; i<=nSlices; i++) {
+				setSlice(i);
+				run("Paste");	
+						}	
+
+// fin macro
+
+
+
